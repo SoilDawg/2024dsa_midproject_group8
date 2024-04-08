@@ -1,0 +1,31 @@
+---
+title: "midproject_analysis"
+format: html
+editor: visual
+---
+
+#Treatment design
+
+NO3, LOI, Soil_pH
+soil_depth 0-5cm, 5-10, 10-20, 20-40, 40-60, 60-90
+mineral fertilizer, broiler litter
+
+
+Treatment?
+Level?
+Replication?
+
+
+
+#setup
+```{r loading package}
+library(readr)
+```
+
+
+
+```{r}
+data<- read_csv("../2024dsa_midproject_group8/data/Midterm_proj_data.csv")
+data
+```
+
