@@ -12,7 +12,7 @@ format:
 
 # Mid-term project GitHub repository URL:  
 
-Paste here the URL of the GitHub project (after going through the instruction steps)
+https://github.com/SoilDawg/2024dsa_midproject_group8.git
 
 # Instructions  
 This file contains both the **instructions** for the mid-term project and placeholders for your code. You are required to use this file to produce code, output, and answers to the questions below.  
@@ -30,15 +30,37 @@ To get you setup, you will need to:
   - Student 1 and 2 work together to update the README file. README files should explain what the repository is about, the goals of that project, who is working in it, and any other important details you may find.  
   
 # Introduction  
-Describe here the introduction of your problem. Consider this as a shortened version of your paper, where you will briefly discuss in 3-4 paragraphs what is the issue/gap in literature, and how the data you collected will help answer this gap.  
+Describe here the introduction of your problem. Consider this as a shortened version of your paper, where you will briefly discuss in 3-4 paragraphs what is the issue/gap in literature, and how the data you collected will help answer this gap.
+
+Soil nutrient management decisions in grazing lands should account for the preexisting nutrients in the soil and their interaction with soil water depending on drainage class to be economically and environmentally beneficial.Addition of broiler litter and plant residues to soils can elevate soil organic carbon in the long term along with increased nutrient mineralization, immobilization, turnover rates and potential mineralization rates. Information on field scale distribution of soil organic carbon, and mechanisms associated with differences due to contrasting fertilization legacies to deeper soil depths is lacking. Hence measuring loss-on-ignition carbon (LOI) which is a measure of soil organic carbon (0.47*LOI for the soils similar to this study, according to Hendricks et al., 2017) and comparing the LOI carbon vertical distribution through different depths in either BL or Min fertilization legacies would provide crucial information on differences in nutrient management required between the two fertilization legacies. 
+Soil drainage characteristics can influence runoff and leaching losses of soil C and N. Research has shown greater losses of dissolved organic carbon (DOC) and dissolved organic (DON) in poorly draining soils compared to freely draining soils (Ghani et al., 2010).  Greater residence time of soil water and greater diffusion of dissolved organic matter into the soil solution in moderately well-drained to poorly drained soil have been re-ported (Ghani et al., 2010). In well-drained soils, this same manuscript reported lower residence time of water in soil pores due to faster drainage and greater protection of soil organic matter where aluminum and iron oxides were present. However, changes from oxic to anoxic environments within soil profile could result in mineralization of organic matter with greater CO2 production mediated by Fe-reduction (Chen et al., 2020). The drainage class of soils is crucial in determining better grazing management decisions due to its influence on organic matter decomposition and nutrient cycling mechanisms.
+  
 
 # Hypothesis and objectives  
-Describe here your hypothesis, followed by your objectives. Make sure your hypothesis are testable and bold, and objectives are clear.  
+Hypothesis: LOI carbon concentrations in soils to a depth of 90 cm are different with either broiler litter or mineral fertilization legacies and either well-drained or moderately well-drained drainage classes. 
+Objectives: To determine LOI concentrations in soils to a depth of 90 cm and compare the depth distribution between the the two fertilization legacies (BL and Min) and between two drainage classes (WD and MWD).  
 
 # Material and Methods  
 Describe here your overall material and methods as it pertains to the analysis you will conduct, including study description, site/setup description, what equipment was used, etc. just like you would in a paper. Make sure to clearly explain what was measured and how.
+## Site description
+Our study was conducted on ten 1-ha pastures at Eatonton Beef Research Unit in Putnam County, Georgia. Each pasture unit in our study has a shade and a waterer at the top landscape position.  Pastures in the study were grazed under a continuous system with two Hereford x Black Angus heifers each. Hay was fed at upland locations.
 
 ## Study design  
+The study pastures had a legacy (past decade or more) of either broiler litter or mineral fertilizer (Urea Ammonium Nitrate, UAN) application. Broiler litter fertilized pastures (BL) include six pasture units (P1-P6) and mineral fertilized (Min) pastures include four pastures (P7-P10). Within each of the legacy pastures, soil types varied with contrasting drainage classes (Table 1) including well drained (WD), moderately well drained (MWD) and somewhat poorly drained (SPD).  
+Pastures	Pasture Area (m2)	Fertilization Legacy	Number of samples (WD/MWD/SPD)
+P1	7891	Broiler Litter	15 (11/4/0)
+P2	7878	Broiler Litter	15 (6/5/4)
+P3	7106	Broiler Litter	16 (4/3/9)
+P4	7004	Broiler Litter	18 (15/3/0)
+P5	7124	Broiler Litter	16 (8/8/0)
+P6	7188	Broiler Litter	16 (0/15/0)
+P7	7800	Mineral Fertilizer	15 (15/0/0)
+P8	7579	Mineral Fertilizer	17 (17/0/0)
+P9	7753	Mineral Fertilizer	17 (0/17/0)
+P10	7648	Mineral Fertilizer	15 (3/12/0)
+
+Min fertilization legacy did not have SPD soils hence only WD and MWD drainage classes can be compared between fertilization legacies.
+The proposed treatment design is a split-split plot design with repeated measures
 Clearly describe your study design here, including treatment design (which factors and levels, the hierarchy among them, etc.), and your experimental design (number of reps/blocks, how was randomization performed, etc.), as we talked about in class.  
 
 
@@ -46,9 +68,48 @@ Clearly describe your study design here, including treatment design (which facto
 Describe here your statistical analysis, including what type of ANOVA model you ran (based on the design above), what was your response variable, what were your explanatory variables and how were the explanatory variables treated (random or fixed). Provide your alpha level. Explain which function from which package you used to analyze this data. Explain how you checked linear model assumptions and whether or not they were met. Overall, make sure you explain in sufficient detail that, if given your data, a knowledgeable person would be able to reproduce your analysis exactly.  
 
 # Results  
-Here is where the coding is going to happen, and it will be completely up to you. Include under this section as many sub-sections (using ##) and as many chunks needed to create the analytical workflow for your analysis, starting at loading packages and data, wrangling, EDA, modeling, assumptions checking, ANOVA table, means, pairwise comparisons, and final publication-quality plot.  
+Here is where the coding is going to happen, and it will be completely up to you. Include under this section as many sub-sections (using ##) and as many chunks needed to create the analytical workflow for your analysis, starting at loading packages and data, wrangling, EDA, modeling, assumptions checking, ANOVA table, means, pairwise comparisons, and final publication-quality plot.
 
-Make sure to run a model that reflects your study design. Even if your study design does not include one of the designs covered in class, you are still expected to run the most appropriate model. If you need help for references, let me know.  
+## Package loading
+
+```{r}
+#Loading packages and data
+library(tidyverse)
+library(janitor) # to clean data
+library(dplyr)
+library(car) # for Anova function
+library(lme4)
+library(broom) # for model residuals extraction
+library(emmeans) # for model mean extraction
+library(multcomp) # for pairwise comparison letter display
+library(nlme) # for repeated measure correlation structures 
+```
+
+## Data loading and wrangling
+```{r}
+wqp_rm<- read_csv("../data/Midterm_proj_select_data.csv")%>%
+  clean_names()%>%
+  pivot_longer(names_to = "depth_loi",
+               values_to = "loi_g_kg",
+               cols = c(contains("loi_g_kg")))%>%
+  separate(depth_loi,
+           into = c("depth", "loi"))%>%
+  mutate(soil_depth = paste0(depth,"-", loi))%>%
+  dplyr::select(!c(depth, loi))
+wqp_rm
+```
+
+Make sure to run a model that reflects your study design. Even if your study design does not include one of the designs covered in class, you are still expected to run the most appropriate model. If you need help for references, let me know. 
+
+```{r}
+wqp_rm_model <- lme(loi_g_kg ~ soil_depth* soil_drainage_type*eas_x*fl,
+                    random = ~1|soil_depth/soil_drainage_type/fl,
+                    data = wqp_rm,
+                    na.rm = T)
+
+wqp_rm_model
+```
+
 
 Before each chunk, describe the steps being performed in that chunk. For example, "Here I will load the data".  
 
