@@ -6,26 +6,72 @@ editor: visual
 
 #Treatment design
 
-NO3, LOI, Soil_pH
-soil_depth 0-5cm, 5-10, 10-20, 20-40, 40-60, 60-90
-mineral fertilizer, broiler litter
-
-
-Treatment?
-Level?
-Replication?
 
 
 
 #setup
 ```{r loading package}
 library(readr)
+library(sf)
+library(tidyverse)
+library(dplyr)
 ```
 
 
 
 ```{r}
-data<- read_csv("../2024dsa_midproject_group8/data/Midterm_proj_data.csv")
+data<- read_csv("../data/Midterm_proj_data.csv")
 data
 ```
+#wrangling
+```{r}
+
+data_w<- data %>%
+  #remove NA
+  na.omit() %>%
+  
+  janitor::clean_names() %>%
+  separate(sample_id,
+           into = c("p", "id")) %>%
+  mutate( fertilizer_legacy = case_when(
+    
+   id <= 96 ~ "BL",
+   id >96 ~ "MF"
+          )) %>%
+
+  
+  dplyr::select(eas_x,nor_y,x0_5_loi_g_kg, x5_10_loi_g_kg, x10_20_loi_g_kg, x20_40_loi_g_kg, x40_60_loi_g_kg, x60_90_loi_g_kg, soil_drainage_type, fertilizer_legacy)
+  
+  
+  #mutate(0-5_loi = x0_5_loi_g_kg) %>%
+  #mutate(10-20_loi= x10_20_loi_g_kg) %>%
+  #mutate(20-40_loi= x20_40_loi_g_kg) %>%
+  #mutate(40-60_loi= x40_60_loi_g_kg) %>%
+  #mutate(60-90_loi = x60_90_loi_g_kg
+
+
+#mutate(level1= str_remove(x0_5_loi_g_kg,"x"))  # to remove x
+  
+data_w
+  
+```
+```{r summary}
+summary(data_w)
+```
+
+
+
+```{r}
+library(lme4)
+# Changing to sum-to-zero contrast
+options(contrasts = c("contr.sum", "contr.poly"))
+
+mod1<- lmer(data = data_w,
+            formula = x0_5_loi_g_kg~
+              (fertilizer_legacy* soil_drainage_type) +
+             (1|fertilizer_legacy)
+            )
+```
+
+
 
