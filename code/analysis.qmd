@@ -6,72 +6,101 @@ editor: visual
 
 #Treatment design
 
-
-
-
 #setup
+
 ```{r loading package}
 library(readr)
 library(sf)
 library(tidyverse)
 library(dplyr)
+library(car)
 ```
-
-
 
 ```{r}
 data<- read_csv("../data/Midterm_proj_data.csv")
 data
 ```
+
 #wrangling
+
 ```{r}
+
+
+
 
 data_w<- data %>%
   #remove NA
   na.omit() %>%
   
   janitor::clean_names() %>%
+  
+  #separating rows according to fertilizer legacy BL= Broiler litter,ML= Mineral fertilizer
   separate(sample_id,
            into = c("p", "id")) %>%
-  mutate( fertilizer_legacy = case_when(
-    
-   id <= 96 ~ "BL",
-   id >96 ~ "MF"
+  mutate(fertilizer_legacy = case_when(
+    as.numeric(id) <= 96 ~ "BL",
+    TRUE ~ "MF"
           )) %>%
-
+  # changing the column class
   
-  dplyr::select(eas_x,nor_y,x0_5_loi_g_kg, x5_10_loi_g_kg, x10_20_loi_g_kg, x20_40_loi_g_kg, x40_60_loi_g_kg, x60_90_loi_g_kg, soil_drainage_type, fertilizer_legacy)
+  mutate(SDT = factor(soil_drainage_type)) %>%
+  mutate(FL= factor(fertilizer_legacy)) %>%
   
+  #keeping only the necessary columns         
+  dplyr::select(eas_x,nor_y,x0_5_loi_g_kg, x5_10_loi_g_kg, x10_20_loi_g_kg, x20_40_loi_g_kg, x40_60_loi_g_kg, x60_90_loi_g_kg, SDT, FL)
   
-  #mutate(0-5_loi = x0_5_loi_g_kg) %>%
-  #mutate(10-20_loi= x10_20_loi_g_kg) %>%
-  #mutate(20-40_loi= x20_40_loi_g_kg) %>%
-  #mutate(40-60_loi= x40_60_loi_g_kg) %>%
-  #mutate(60-90_loi = x60_90_loi_g_kg
-
-
-#mutate(level1= str_remove(x0_5_loi_g_kg,"x"))  # to remove x
   
 data_w
-  
+ 
+
 ```
+
 ```{r summary}
 summary(data_w)
 ```
 
-
-
-```{r}
+```{r default model}
 library(lme4)
+library(Matrix)
 # Changing to sum-to-zero contrast
 options(contrasts = c("contr.sum", "contr.poly"))
 
-mod1<- lmer(data = data_w,
-            formula = x0_5_loi_g_kg~
-              (fertilizer_legacy* soil_drainage_type) +
-             (1|fertilizer_legacy)
+mod0<- lmer(data = data_w,
+            formula = x0_5_loi_g_kg~ FL*SDT+ (1|FL)
             )
 ```
 
+```{r}
+summary(mod0)
+```
 
+```{r as random}
+library(nlme)
+mod1<- lme(x0_5_loi_g_kg~ FL*SDT,
+           random= ~1|FL,
+           data = data_w,
+            )
+
+```
+
+#can we do some analysis in this
+
+```{r}
+data_w <- data_w %>%
+pivot_longer(cols= x0_5_loi_g_kg:x60_90_loi_g_kg,
+             names_to = "depth",
+             values_to ="LOI" )
+
+data_w
+```
+
+```{r}
+options(contrasts = c("contr.sum", "contr.poly"))
+
+mod00<- lmer(data = data_w,
+            formula = LOI ~ FL*SDT*depth+ (1|FL)
+            )
+
+summary(mod00)
+```
 
