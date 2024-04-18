@@ -1,6 +1,6 @@
 ---
 title: "Mid-term project instructions"
-author: "FULL NAME STUDENT 1 & FULL NAME STUDENT 2"
+author: "ANISH SUBEDI & FULL NAME STUDENT 2"
 format:
   html:
     code-fold: false
@@ -38,7 +38,7 @@ Soil drainage characteristics can influence runoff and leaching losses of soil C
 
 # Hypothesis and objectives  
 Hypothesis: LOI carbon concentrations in soils to a depth of 90 cm are different with either broiler litter or mineral fertilization legacies and either well-drained or moderately well-drained drainage classes. 
-Objectives: To determine LOI concentrations in soils to a depth of 90 cm and compare the depth distribution between the the two fertilization legacies (BL and Min) and between two drainage classes (WD and MWD).  
+Objectives: To determine LOI concentrations in soils to a depth of 90 cm and compare the depth distribution between the the two fertilization legacies (BL and MF) and between two drainage classes (WD and MWD).  
 
 # Material and Methods  
 Describe here your overall material and methods as it pertains to the analysis you will conduct, including study description, site/setup description, what equipment was used, etc. just like you would in a paper. Make sure to clearly explain what was measured and how.
@@ -46,7 +46,7 @@ Describe here your overall material and methods as it pertains to the analysis y
 Our study was conducted on ten 1-ha pastures at Eatonton Beef Research Unit in Putnam County, Georgia. Each pasture unit in our study has a shade and a waterer at the top landscape position.  Pastures in the study were grazed under a continuous system with two Hereford x Black Angus heifers each. Hay was fed at upland locations.
 
 ## Study design  
-The study pastures had a legacy (past decade or more) of either broiler litter or mineral fertilizer (Urea Ammonium Nitrate, UAN) application. Broiler litter fertilized pastures (BL) include six pasture units (P1-P6) and mineral fertilized (Min) pastures include four pastures (P7-P10). Within each of the legacy pastures, soil types varied with contrasting drainage classes (Table 1) including well drained (WD), moderately well drained (MWD) and somewhat poorly drained (SPD).  
+The study pastures had a legacy (past decade or more) of either broiler litter or mineral fertilizer (Urea Ammonium Nitrate, UAN) application. Broiler litter fertilized pastures (BL) include six pasture units (P1-P6) and mineral fertilized (MF) pastures include four pastures (P7-P10). Within each of the legacy pastures, soil types varied with contrasting drainage classes (Table 1) including well drained (WD), moderately well drained (MWD) and somewhat poorly drained (SPD).  
 Pastures	Pasture Area (m2)	Fertilization Legacy	Number of samples (WD/MWD/SPD)
 P1	7891	Broiler Litter	15 (11/4/0)
 P2	7878	Broiler Litter	15 (6/5/4)
@@ -59,60 +59,466 @@ P8	7579	Mineral Fertilizer	17 (17/0/0)
 P9	7753	Mineral Fertilizer	17 (0/17/0)
 P10	7648	Mineral Fertilizer	15 (3/12/0)
 
-Min fertilization legacy did not have SPD soils hence only WD and MWD drainage classes can be compared between fertilization legacies.
-The proposed treatment design is a split-split plot design with repeated measures
-Clearly describe your study design here, including treatment design (which factors and levels, the hierarchy among them, etc.), and your experimental design (number of reps/blocks, how was randomization performed, etc.), as we talked about in class.  
+MF fertilization legacy did not have SPD soils hence only WD and MWD drainage classes can be compared between fertilization legacies.
+The proposed treatment design is a split-split plot design with repeated measures for the easting and northing projected coordinates.
+Hence the factors that are used to evaluate the LOI carbon distributions in the study pastures at different depth(separate model for each depth) were,
+FL = Fertilizer Legacy with two levels BL (broiler litter), and MF (Mineral fertilization).
+SDT = Soil Drainage Type with two levels WD (well drained), and MWD (Moderately well drained).
+X = Easting in UTM zone 17 N projection.
+Y = Northing in UTM zone 17 N projection.
+
+The SDT factor in the study pastures occurs within the BL and Min legacies thus in the hierarchy, FL is followed by SDT and then the XY locations. As this is the baseline data before application of any treatments in my study, the number of replications for groups being compared include,
+BL WD = 5 
+BL MWD = 6
+MF WD = 3
+MF MWD = 2
+The challenges we faced with the data used in this project was the unbalanced replications for groups being compared. 
+We also created a data table as an sf object using the sf package to properly specify the spatial geometry of our data and append the X and Y values of projected coordinates in terms of meters(m) in our data. This step was carried out to allow us to use easting and northing data in repeated measures analysis.
 
 
 ## Statistical analysis  
-Describe here your statistical analysis, including what type of ANOVA model you ran (based on the design above), what was your response variable, what were your explanatory variables and how were the explanatory variables treated (random or fixed). Provide your alpha level. Explain which function from which package you used to analyze this data. Explain how you checked linear model assumptions and whether or not they were met. Overall, make sure you explain in sufficient detail that, if given your data, a knowledgeable person would be able to reproduce your analysis exactly.  
+For each depth analyzed in the data, we bagan with Describe here your statistical analysis, including what type of ANOVA model you ran (based on the design above), what was your response variable, what were your explanatory variables and how were the explanatory variables treated (random or fixed). Provide your alpha level. Explain which function from which package you used to analyze this data. Explain how you checked linear model assumptions and whether or not they were met. Overall, make sure you explain in sufficient detail that, if given your data, a knowledgeable person would be able to reproduce your analysis exactly.  
 
 # Results  
 Here is where the coding is going to happen, and it will be completely up to you. Include under this section as many sub-sections (using ##) and as many chunks needed to create the analytical workflow for your analysis, starting at loading packages and data, wrangling, EDA, modeling, assumptions checking, ANOVA table, means, pairwise comparisons, and final publication-quality plot.
 
 ## Package loading
-
+Here we are loading all the packages required to run the analyses.
 ```{r}
+#| message: false
 #Loading packages and data
-library(tidyverse)
-library(janitor) # to clean data
-library(dplyr)
-library(car) # for Anova function
-library(lme4)
-library(broom) # for model residuals extraction
-library(emmeans) # for model mean extraction
-library(multcomp) # for pairwise comparison letter display
-library(nlme) # for repeated measure correlation structures
+library(readr)
 library(sf)
+library(tidyverse)
+library(dplyr)
+library(car)
+library(sf)
+library(nlme)
+library(lme4)
 ```
 
 ## Data loading and wrangling
+Here in the following chunk we are loading the data and wrangling to make data easily readable and comparable between levels WD, and MWD common in the SDT factor for analyses planned between BL and MF fertilization legacies.
 ```{r}
-wqp_rm <- read_csv("../data/Midterm_proj_select_data.csv")%>%
-  clean_names()%>%
-  mutate(fdt = factor(soil_drainage_type),
-        ffl = factor(fl),
-        f_easx = factor(eas_x),
-        f_nory = factor(nor_y))
- 
-wqp_rm
+#| message: false
+data<- read_csv("../data/Midterm_proj_data.csv")
+data
+set.seed(123)
+data_w<- data %>%
+  #remove NA
+  na.omit() %>%
+  
+  janitor::clean_names() %>%
+  
+#separating rows according to fertilizer legacy BL= Broiler litter,ML= Mineral fertilizer
+  separate(sample_id,
+           into = c("p", "id")) %>%
+  mutate(fertilizer_legacy = case_when(
+    as.numeric(id) <= 96 ~ "BL",
+    TRUE ~ "MF"
+          )) %>%
+  # changing the column class
+  
+  mutate(SDT = factor(soil_drainage_type)) %>%
+  mutate(FL= factor(fertilizer_legacy)) %>%
+  dplyr::select(eas_x,nor_y,x0_5_loi_g_kg, x5_10_loi_g_kg, x10_20_loi_g_kg, x20_40_loi_g_kg, x40_60_loi_g_kg, x60_90_loi_g_kg, SDT, FL)%>%
+  subset(SDT !="SPD")
+data_w
+```
+In the following chunk we are assigning spatial geometry based on the easting (X) and northing (Y) data we have for all points sampled for this study. We then extract and bind the XY data to our sf data.
+```{r}
+#Using sf package to assign spatial geometry and extract easting and northing values from geometry
+data_sf <- data_w %>%
+  st_as_sf(coords = c("eas_x", "nor_y"), crs = 32617) 
+data_sf
+
+data_xy<- data_sf%>%
+  st_coordinates() %>%
+  as.data.frame()
+data_xy
+
+data_dfw <- cbind(data_sf, data_xy)
+data_dfw
+class(data_dfw)
+summary(data_dfw)
 ```
 
 Make sure to run a model that reflects your study design. Even if your study design does not include one of the designs covered in class, you are still expected to run the most appropriate model. If you need help for references, let me know. 
-
+In the following chunk we are setting the contrast to sum to zero from default set to zero and then fitting the lmer model (mod0) for all depths studied.
 ```{r}
-wqp_rm_model <- lme(x0_5_loi_g_kg ~ ffl*dt*f_easx + f_nory,
-  random = ~ 1/fl/dt,
-  data = wqp_rm,
-  na.action = na.exclude)
+options(contrasts = c("contr.sum", "contr.poly"))
 
-summary(wqp_rm_model)
+mod0_0_5 <- lmer(x0_5_loi_g_kg ~ SDT * FL * X + Y + (1 | FL) + (1 | SDT),
+                 data = data_dfw)
+
+mod0_5_10 <- lmer(x5_10_loi_g_kg ~ SDT * FL * X + Y + (1 | FL) + (1 | SDT),
+                 data = data_dfw)
+mod0_10_20 <- lmer(x10_20_loi_g_kg ~ SDT * FL * X + Y + (1 | FL) + (1 | SDT),
+                 data = data_dfw)
+mod0_20_40 <- lmer(x20_40_loi_g_kg ~ SDT * FL * X + Y + (1 | FL) + (1 | SDT),
+                 data = data_dfw)
+mod0_40_60 <- lmer(x40_60_loi_g_kg ~ SDT * FL * X + Y + (1 | FL) + (1 | SDT),
+                 data = data_dfw)
+mod0_60_90 <- lmer(x60_90_loi_g_kg ~ SDT * FL * X + Y + (1 | FL) + (1 | SDT),
+                 data = data_dfw)
+mod0_0_5
+anova(mod0_0_5)
+mod0_5_10
+anova (mod0_5_10)
+mod0_10_20
+anova (mod0_10_20)
+mod0_20_40
+anova (mod0_20_40)
+mod0_40_60
+anova (mod0_40_60)
+mod0_60_90
+anova (mod0_60_90)
+```
+
+Then we fit the models with spatial correlation structures which should be the more appropriate choice with location data included in our analyses. The following chunk includes the nlme::lme model with exponential correlation structure for all 6 depths sampled.
+```{r}
+mod1_exp_0_5<- lme(x0_5_loi_g_kg~SDT*FL*X+Y,  #SDT*FL doesnot work
+                random = ~1|FL/SDT,
+           correlation =  corExp(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod1_exp_0_5)
+
+mod1_exp_5_10<- lme(x5_10_loi_g_kg~SDT*FL*X+Y,  #SDT*FL doesnot work
+                random = ~1|FL/SDT,
+           correlation =  corExp(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod1_exp_5_10)
+
+mod1_exp_10_20<- lme(x10_20_loi_g_kg~SDT*FL*X+Y,  #SDT*FL doesnot work
+                random = ~1|FL/SDT,
+           correlation =  corExp(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod1_exp_10_20)
+
+mod1_exp_20_40<- lme(x20_40_loi_g_kg~SDT*FL*X+Y,  #SDT*FL doesnot work
+                random = ~1|FL/SDT,
+           correlation =  corExp(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod1_exp_20_40)
+
+mod1_exp_40_60<- lme(x40_60_loi_g_kg~SDT*FL*X+Y,  #SDT*FL doesnot work
+                random = ~1|FL/SDT,
+           correlation =  corExp(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod1_exp_40_60)
+
+mod1_exp_60_90<- lme(x60_90_loi_g_kg~SDT*FL*X+Y,  #SDT*FL doesnot work
+                random = ~1|FL/SDT,
+           correlation =  corExp(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod1_exp_60_90)
 ```
 
 
-Before each chunk, describe the steps being performed in that chunk. For example, "Here I will load the data".  
+The following chunk includes the nlme::lme model with spherical correlation structure for each depth.
+```{r}
+mod2_sph_0_5<- lme(x0_5_loi_g_kg~SDT*FL*X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corSpher(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod2_sph_0_5)
 
-If a chunk produces output, like printing a data frame, statistical summary, a plot, ANOVA table, etc., make sure to write text interpreting what you see and how you can/will use that information to move forward to the next steps in the workflow.  
+mod2_sph_5_10<- lme(x5_10_loi_g_kg~SDT*FL*X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corSpher(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod2_sph_5_10)
+
+mod2_sph_10_20<- lme(x10_20_loi_g_kg~SDT*FL*X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corSpher(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod2_sph_10_20)
+
+mod2_sph_20_40<- lme(x20_40_loi_g_kg~SDT*FL*X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corSpher(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod2_sph_20_40)
+
+mod2_sph_40_60<- lme(x40_60_loi_g_kg~SDT*FL*X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corSpher(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod2_sph_40_60)
+
+mod2_sph_60_90<- lme(x60_90_loi_g_kg~SDT*FL*X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corSpher(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod2_sph_60_90)
+```
+
+
+```{r}
+mod3_gaus_0_5<- lme(x0_5_loi_g_kg~SDT*FL*X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corGaus(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod3_gaus_0_5)
+
+mod3_gaus_5_10<- lme(x5_10_loi_g_kg~SDT*FL*X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corGaus(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod3_gaus_5_10)
+
+mod3_gaus_10_20<- lme(x10_20_loi_g_kg~SDT*FL*X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corGaus(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod3_gaus_10_20)
+
+mod3_gaus_20_40<- lme(x20_40_loi_g_kg~SDT*FL*X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corGaus(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod3_gaus_20_40)
+
+mod3_gaus_40_60<- lme(x40_60_loi_g_kg~SDT*FL*X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corGaus(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod3_gaus_40_60)
+
+mod3_gaus_60_90<- lme(x60_90_loi_g_kg~SDT*FL*X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corGaus(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod3_gaus_60_90)
+```
+Following chunk includes the nlme::lme model with linear correlation structures. Depths 5-10 cm and 40-60 cm could not be fit into the model due to convergence issues.
+
+```{r}
+mod4_lin_0_5<- lme(x0_5_loi_g_kg~SDT*FL*X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corLin(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod4_lin_0_5)
+
+mod4_lin_10_20<- lme(x10_20_loi_g_kg~SDT*FL*X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corLin(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod4_lin_10_20)
+
+mod4_lin_20_40<- lme(x20_40_loi_g_kg~SDT*FL*X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corLin(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod4_lin_20_40)
+
+
+mod4_lin_60_90<- lme(x60_90_loi_g_kg~SDT*FL*X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corLin(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod4_lin_60_90)
+```
+
+
+Following chunk includes the code to run anova to compare the different correlation structure models for all depths studied.
+
+```{r}
+anova( mod1_exp_0_5, mod2_sph_0_5,mod3_gaus_0_5,mod4_lin_0_5)%>%
+  as.data.frame()%>%
+  rownames_to_column(var= "modelname") %>%
+  janitor::clean_names() %>%
+  dplyr::select(modelname, model, df,aic, bic) %>%
+  arrange(aic) %>%
+  arrange(bic)
+
+anova( mod1_exp_5_10, mod2_sph_5_10,mod3_gaus_5_10)%>%
+  as.data.frame()%>%
+  rownames_to_column(var= "modelname") %>%
+  janitor::clean_names() %>%
+  dplyr::select(modelname, model, df,aic, bic) %>%
+  arrange(aic) %>%
+  arrange(bic)
+
+anova( mod1_exp_10_20, mod2_sph_10_20,mod3_gaus_10_20,mod4_lin_10_20)%>%
+  as.data.frame()%>%
+  rownames_to_column(var= "modelname") %>%
+  janitor::clean_names() %>%
+  dplyr::select(modelname, model, df,aic, bic) %>%
+  arrange(aic) %>%
+  arrange(bic)
+
+anova( mod1_exp_20_40, mod2_sph_20_40,mod3_gaus_20_40,mod4_lin_20_40)%>%
+  as.data.frame()%>%
+  rownames_to_column(var= "modelname") %>%
+  janitor::clean_names() %>%
+  dplyr::select(modelname, model, df,aic, bic) %>%
+  arrange(aic) %>%
+  arrange(bic)
+
+anova( mod1_exp_40_60, mod2_sph_40_60,mod3_gaus_40_60)%>%
+  as.data.frame()%>%
+  rownames_to_column(var= "modelname") %>%
+  janitor::clean_names() %>%
+  dplyr::select(modelname, model, df,aic, bic) %>%
+  arrange(aic) %>%
+  arrange(bic)
+
+anova( mod1_exp_60_90, mod2_sph_60_90,mod3_gaus_60_90,mod4_lin_60_90)%>%
+  as.data.frame()%>%
+  rownames_to_column(var= "modelname") %>%
+  janitor::clean_names() %>%
+  dplyr::select(modelname, model, df,aic, bic) %>%
+  arrange(aic) %>%
+  arrange(bic)
+```
+
+After comparing the models it is evident that the 0-5 cm depth was best fit by the exponential correlation structure model while all the other depths were best fit by the spherical correlation structure model. The chunk below shows the codes to check the linear model assumptions of the best fit model for depths 0-5 cm.
+
+```{r}
+library(broom.mixed)
+mod1_exp_resid_0_5<- augment(mod1_exp_0_5) %>%
+  mutate(.stdresid=resid(mod1_exp_0_5, type="pearson", scaled=T))
+mod1_exp_resid_0_5
+
+#Random effect of fertilizer legacies
+ranef(mod1_exp_0_5)[[1]] %>%
+  ggplot(aes(sample=`(Intercept)`))+
+  stat_qq(  shape = 21,
+            fill = "purple", 
+            size = 3,
+            alpha = .7
+  )+
+  stat_qq_line()+
+  labs(x = "Theoretical quantile",
+       y = "Sample quantile")+
+  theme_bw()
+
+#Fertilizer legacy:Soil drainage type interaction
+ranef(mod1_exp_0_5)[[2]] %>%
+  ggplot(aes(sample=`(Intercept)`))+
+  stat_qq(  shape = 21,
+            fill = "purple", 
+            size = 3,
+            alpha = .7
+  )+
+  stat_qq_line()+
+  labs(x = "Theoretical quantile",
+       y = "Sample quantile")+
+  theme_bw()
+# Checking if within group errors are iid ~ N(0, var_e)
+
+ggplot(mod1_exp_resid_0_5, aes(x=.fitted, y=.stdresid))+
+  geom_hline(yintercept = 0, color="red")+
+  geom_point(shape = 21,
+             fill = "purple", 
+             size = 3,
+             alpha = .7)+
+  geom_smooth()+
+  geom_hline(yintercept = c(-3,3), color = "red")+
+  theme_bw()
+
+ggplot(mod1_exp_resid_0_5, aes(sample=.stdresid))+
+  stat_qq(  shape = 21,
+            fill = "purple", 
+            size = 3,
+            alpha = .7
+  )+
+  stat_qq_line()+
+  labs(x = "Theoretical quantile",
+       y = "Sample quantile")+
+  theme_bw()
+
+```
+Since the random effect of fertilizer legacy and the fertilizer legacy: soil drainage type are independently identically distributed. The residuals of the between group effect were normal (only two points as seen in figure) and similar results were seen for the within group effects with four points for the four groups for FL:SDT interaction. The fitted vs standarized residuals plot does not show a clear pattern and no potential outliers are seen.The residuals also are iid hence we will proceed with Anova. Following chunk includes codes to run type-3 Anova to compare the means of the different groups for the 0-5 cm soil depth.
+
+```{r}
+Anova(mod1_exp_0_5, type = 3)
+```
+Results of the Anova shows no significance for fertilizer legacy, soil drainage type, and the interaction. Hence we have not made comparison of the means for the groups individually of with interaction.
+
+
+In the following chunk, we check the linear model assumptions of the best fit model which was the spherical correlation structure model for 10-20 cm depth.
+
+```{r}
+mod2_sph_resid_10_20<- augment(mod2_sph_10_20) %>%
+  mutate(.stdresid=resid(mod2_sph_10_20, type="pearson", scaled=T))
+mod2_sph_resid_10_20
+
+#Random effect of fertilizer legacies
+ranef(mod2_sph_10_20)[[1]] %>%
+  ggplot(aes(sample=`(Intercept)`))+
+  stat_qq(  shape = 21,
+            fill = "purple", 
+            size = 3,
+            alpha = .7
+  )+
+  stat_qq_line()+
+  labs(x = "Theoretical quantile",
+       y = "Sample quantile")+
+  theme_bw()
+
+#Fertilizer legacy:Soil drainage type interaction
+ranef(mod2_sph_10_20)[[2]] %>%
+  ggplot(aes(sample=`(Intercept)`))+
+  stat_qq(  shape = 21,
+            fill = "purple", 
+            size = 3,
+            alpha = .7
+  )+
+  stat_qq_line()+
+  labs(x = "Theoretical quantile",
+       y = "Sample quantile")+
+  theme_bw()
+# Checking if within group errors are iid ~ N(0, var_e)
+
+ggplot(mod2_sph_resid_10_20, aes(x=.fitted, y=.stdresid))+
+  geom_hline(yintercept = 0, color="red")+
+  geom_point(shape = 21,
+             fill = "purple", 
+             size = 3,
+             alpha = .7)+
+  geom_smooth()+
+  geom_hline(yintercept = c(-3,3), color = "red")+
+  theme_bw()
+
+ggplot(mod2_sph_resid_10_20, aes(sample=.stdresid))+
+  stat_qq(  shape = 21,
+            fill = "purple", 
+            size = 3,
+            alpha = .7
+  )+
+  stat_qq_line()+
+  labs(x = "Theoretical quantile",
+       y = "Sample quantile")+
+  theme_bw()
+```
+
+Similar results were observed for the spherical spatial correlation structure model for the 10-20 cm. The between group and within group effects are iid and the residuals are iid as well so we will proceed with the Anova to compare the means. In the following chunk, we run the type-3 Anova to compare means between the different groups at 10-20 cm soil depth.
+
+```{r}
+Anova(mod2_sph_10_20, type = 3)
+```
+Results on Anova shows significant effects of the easting and northing locations on the LOI carbon concentration of soils at 10-20 cm depth. 
+
+```{r}
+sph_10_20_XY_means <- data_dfw %>%
+  group_by(X, Y) %>%
+  summarise(mean_loi_10_20 = mean(x10_20_loi_g_kg ))
+
+sph_10_20_XY_means
+```
+Plotting means at the significant X and Y locations.
+
+```{r}
+ggplot(data_dfw, aes(x = X, y = Y, color = factor(X), shape = factor(Y))) +
+  geom_point() +
+  stat_summary(data = sph_10_20_XY_means, fun = mean_loi_10_20, geom = "point", shape = 1, size = 4, color = "black") +
+  labs(x = "X", y = "Y", color = "Easting", shape = "Northing", title = "Mean Response at X and Y Locations") +
+  theme_minimal()
+```
+
 
 # Team work in GitHub  
 Whether you are working with your future-self or as duos, make sure to stage, commit, and push after finishing each of the sub-sections above. When committing, write commit messages that are short and descriptive (e.g., finished wrangling).  
