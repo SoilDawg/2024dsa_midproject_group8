@@ -14,6 +14,7 @@ library(sf)
 library(tidyverse)
 library(dplyr)
 library(car)
+library(sf)
 ```
 
 ```{r}
@@ -24,10 +25,7 @@ data
 #wrangling
 
 ```{r}
-
-
-
-
+set.seed(123)
 data_w<- data %>%
   #remove NA
   na.omit() %>%
@@ -45,6 +43,9 @@ data_w<- data %>%
   
   mutate(SDT = factor(soil_drainage_type)) %>%
   mutate(FL= factor(fertilizer_legacy)) %>%
+  #mutate(feas_x = factor(eas_x)) %>%
+  #mutate(fnor_y = factor(nor_y)) %>%
+  #mutate(id= row_number()) %>%
   
   #keeping only the necessary columns         
   dplyr::select(eas_x,nor_y,x0_5_loi_g_kg, x5_10_loi_g_kg, x10_20_loi_g_kg, x20_40_loi_g_kg, x40_60_loi_g_kg, x60_90_loi_g_kg, SDT, FL)
@@ -52,55 +53,166 @@ data_w<- data %>%
   
 data_w
  
+```
+
+```{r}
+data_sf <- data_w %>%
+  st_as_sf(coords = c("eas_x", "nor_y"), crs = 32617) 
+data_sf
+```
+ll
+
+```{r}
+data_xy<- data_sf%>%
+  st_coordinates() %>%
+  as.data.frame()
+
+
+data_xy 
+data_dfw <- cbind(data_sf, data_xy)
+data_dfw
+class(data_dfw)
 
 ```
+
+
 
 ```{r summary}
-summary(data_w)
+summary(data_dfw)
 ```
-
-```{r default model}
-library(lme4)
-library(Matrix)
-# Changing to sum-to-zero contrast
+```{r mod0_default_lmer}
 options(contrasts = c("contr.sum", "contr.poly"))
 
-mod0<- lmer(data = data_w,
-            formula = x0_5_loi_g_kg~ FL*SDT+ (1|FL)
-            )
+mod0 <- lmer(x0_5_loi_g_kg ~ SDT + FL + X + Y + (1 | FL) + (1 | SDT),
+                 data = data_dfw)
+
+mod0
+anova(mod0)
+```
+```{r}
+mod1_exp<- lme(x0_5_loi_g_kg~SDT+FL+X+Y,  #SDT*FL doesnot work
+                random = ~1|FL/SDT,
+           correlation =  corExp(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod1_exp)
+```
+
+
+
+
+```{r }
+mod2_sph<- lme(x0_5_loi_g_kg~SDT+FL+X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corSpher(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod2_sph)
+```
+
+```{r gaussian}
+mod3_gaus<- lme(x0_5_loi_g_kg~SDT+FL+X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corGaus(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod3_gaus)
+```
+
+```{r Doesnot work}
+mod4_lin<- lme(x0_5_loi_g_kg~SDT+FL+X+Y,
+                random = ~1|FL/SDT,
+           correlation =  corLin(form = ~(X+Y)),
+           data = data_dfw)
+summary(mod4_lin)
+```
+```{r comparison}
+anova( mod1_exp, mod2_sph,mod3_gaus)%>%
+  as.data.frame()%>%
+  rownames_to_column(var= "modelname") %>%
+  janitor::clean_names() %>%
+  dplyr::select(modelname, model, df,aic, bic) %>%
+  arrange(aic) %>%
+  arrange(bic)
+```
+
+ according to aic and bic exponential model is best..
+ 
+ 
+```{r checking residuals}
+library(broom.mixed)
+mod1_exp_resid<- augment(mod1_exp) %>%
+  mutate(.stdresid=resid(mod1_exp, type="pearson", scaled=T))
+mod1_exp_resid
+```
+```{r random effect of fertilizer legacy}
+ranef(mod1_exp)[[1]] %>%
+  ggplot(aes(sample=`(Intercept)`))+
+  stat_qq(  shape = 21,
+            fill = "purple", 
+            size = 3,
+            alpha = .7
+  )+
+  stat_qq_line()+
+  labs(x = "Theoretical quantile",
+       y = "Sample quantile")+
+  theme_bw()
+
+```
+
+```{r fertilizer : soil drainage type}
+ranef(mod1_exp)[[2]] %>%
+  ggplot(aes(sample=`(Intercept)`))+
+  stat_qq(  shape = 21,
+            fill = "purple", 
+            size = 3,
+            alpha = .7
+  )+
+  stat_qq_line()+
+  labs(x = "Theoretical quantile",
+       y = "Sample quantile")+
+  theme_bw()
+
+```
+
+### Within-group errors are iid ~ N(0, var_e)  
+```{r }
+ggplot(mod1_exp_resid, aes(x=.fitted, y=.stdresid))+
+  geom_hline(yintercept = 0, color="red")+
+  geom_point(shape = 21,
+             fill = "purple", 
+             size = 3,
+             alpha = .7)+
+  geom_smooth()+
+  geom_hline(yintercept = c(-3,3), color = "red")+
+  theme_bw()
 ```
 
 ```{r}
-summary(mod0)
+ggplot(mod1_exp_resid, aes(sample=.stdresid))+
+  stat_qq(  shape = 21,
+            fill = "purple", 
+            size = 3,
+            alpha = .7
+  )+
+  stat_qq_line()+
+  labs(x = "Theoretical quantile",
+       y = "Sample quantile")+
+  theme_bw()
+
 ```
 
-```{r as random}
-library(nlme)
-mod1<- lme(x0_5_loi_g_kg~ FL*SDT,
-           random= ~1|FL,
-           data = data_w,
-            )
+# Inference - correct model  
+```{r anova}
+Anova(mod1_exp, type = 3)
+```
+This model is not showing great result.No interaction among anything.
+
+
+
+
+
+
 
 ```
 
-#can we do some analysis in this
 
-```{r}
-data_w <- data_w %>%
-pivot_longer(cols= x0_5_loi_g_kg:x60_90_loi_g_kg,
-             names_to = "depth",
-             values_to ="LOI" )
 
-data_w
-```
-
-```{r}
-options(contrasts = c("contr.sum", "contr.poly"))
-
-mod00<- lmer(data = data_w,
-            formula = LOI ~ FL*SDT*depth+ (1|FL)
-            )
-
-summary(mod00)
-```
 
