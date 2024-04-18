@@ -82,32 +82,31 @@ library(lme4)
 library(broom) # for model residuals extraction
 library(emmeans) # for model mean extraction
 library(multcomp) # for pairwise comparison letter display
-library(nlme) # for repeated measure correlation structures 
+library(nlme) # for repeated measure correlation structures
+library(sf)
 ```
 
 ## Data loading and wrangling
 ```{r}
-wqp_rm<- read_csv("../data/Midterm_proj_select_data.csv")%>%
+wqp_rm <- read_csv("../data/Midterm_proj_select_data.csv")%>%
   clean_names()%>%
-  pivot_longer(names_to = "depth_loi",
-               values_to = "loi_g_kg",
-               cols = c(contains("loi_g_kg")))%>%
-  separate(depth_loi,
-           into = c("depth", "loi"))%>%
-  mutate(soil_depth = paste0(depth,"-", loi))%>%
-  dplyr::select(!c(depth, loi))
+  mutate(fdt = factor(soil_drainage_type),
+        ffl = factor(fl),
+        f_easx = factor(eas_x),
+        f_nory = factor(nor_y))
+ 
 wqp_rm
 ```
 
 Make sure to run a model that reflects your study design. Even if your study design does not include one of the designs covered in class, you are still expected to run the most appropriate model. If you need help for references, let me know. 
 
 ```{r}
-wqp_rm_model <- lme(loi_g_kg ~ soil_depth* soil_drainage_type*eas_x*fl,
-                    random = ~1|soil_depth/soil_drainage_type/fl,
-                    data = wqp_rm,
-                    na.rm = T)
+wqp_rm_model <- lme(x0_5_loi_g_kg ~ ffl*dt*f_easx + f_nory,
+  random = ~ 1/fl/dt,
+  data = wqp_rm,
+  na.action = na.exclude)
 
-wqp_rm_model
+summary(wqp_rm_model)
 ```
 
 
