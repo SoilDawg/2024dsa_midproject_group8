@@ -41,9 +41,9 @@ Hypothesis: LOI carbon concentrations in soils to a depth of 90 cm are different
 Objectives: To determine LOI concentrations in soils to a depth of 90 cm and compare the depth distribution between the the two fertilization legacies (BL and MF) and between two drainage classes (WD and MWD).  
 
 # Material and Methods  
-Describe here your overall material and methods as it pertains to the analysis you will conduct, including study description, site/setup description, what equipment was used, etc. just like you would in a paper. Make sure to clearly explain what was measured and how.
-## Site description
-Our study was conducted on ten 1-ha pastures at Eatonton Beef Research Unit in Putnam County, Georgia. Each pasture unit in our study has a shade and a waterer at the top landscape position.  Pastures in the study were grazed under a continuous system with two Hereford x Black Angus heifers each. Hay was fed at upland locations.
+Describe here your overall material and methods as it pertains to the analysis you will conduct, including study description, site/setup description, what equipment was used, etc. just like you would in a paper. Make sure to clearly explain what was measured and how.  
+## Site description  
+Our study was conducted on ten 1-ha pastures at Eatonton Beef Research Unit in Putnam County, Georgia. Each pasture unit in our study has a shade and a waterer at the top landscape position.  Pastures in the study were grazed under a continuous system with two Hereford x Black Angus heifers each. Hay was fed at upland locations.  
 
 ## Study design  
 The study pastures had a legacy (past decade or more) of either broiler litter or mineral fertilizer (Urea Ammonium Nitrate, UAN) application. Broiler litter fertilized pastures (BL) include six pasture units (P1-P6) and mineral fertilized (MF) pastures include four pastures (P7-P10). Within each of the legacy pastures, soil types varied with contrasting drainage classes (Table 1) including well drained (WD), moderately well drained (MWD) and somewhat poorly drained (SPD).  
@@ -77,7 +77,7 @@ We also created a data table as an sf object using the sf package to properly sp
 
 
 ## Statistical analysis  
-For each depth analyzed in the data, we bagan with Describe here your statistical analysis, including what type of ANOVA model you ran (based on the design above), what was your response variable, what were your explanatory variables and how were the explanatory variables treated (random or fixed). Provide your alpha level. Explain which function from which package you used to analyze this data. Explain how you checked linear model assumptions and whether or not they were met. Overall, make sure you explain in sufficient detail that, if given your data, a knowledgeable person would be able to reproduce your analysis exactly.  
+For each depth analyzed in the data, we began with Describe here your statistical analysis, including what type of ANOVA model you ran (based on the design above), what was your response variable, what were your explanatory variables and how were the explanatory variables treated (random or fixed). Provide your alpha level. Explain which function from which package you used to analyze this data. Explain how you checked linear model assumptions and whether or not they were met. Overall, make sure you explain in sufficient detail that, if given your data, a knowledgeable person would be able to reproduce your analysis exactly.  
 
 # Results  
 Here is where the coding is going to happen, and it will be completely up to you. Include under this section as many sub-sections (using ##) and as many chunks needed to create the analytical workflow for your analysis, starting at loading packages and data, wrangling, EDA, modeling, assumptions checking, ANOVA table, means, pairwise comparisons, and final publication-quality plot.
@@ -101,9 +101,10 @@ library(lme4)
 Here in the following chunk we are loading the data and wrangling to make data easily readable and comparable between levels WD, and MWD common in the SDT factor for analyses planned between BL and MF fertilization legacies.
 ```{r}
 #| message: false
+#| warning: false
 data<- read_csv("../data/Midterm_proj_data.csv")
-data
-set.seed(123)
+head(data)
+
 data_w<- data %>%
   #remove NA
   na.omit() %>%
@@ -123,23 +124,25 @@ data_w<- data %>%
   mutate(FL= factor(fertilizer_legacy)) %>%
   dplyr::select(eas_x,nor_y,x0_5_loi_g_kg, x5_10_loi_g_kg, x10_20_loi_g_kg, x20_40_loi_g_kg, x40_60_loi_g_kg, x60_90_loi_g_kg, SDT, FL)%>%
   subset(SDT !="SPD")
-data_w
+head(data_w)
 ```
-In the following chunk we are assigning spatial geometry based on the easting (X) and northing (Y) data we have for all points sampled for this study. We then extract and bind the XY data to our sf data.
+  
+  In the following chunk we are assigning spatial geometry based on the easting (X) and northing (Y) data we have for all points sampled for this study. We then extract and bind the XY data to our sf data. 
+  
 ```{r}
 #Using sf package to assign spatial geometry and extract easting and northing values from geometry
 data_sf <- data_w %>%
   st_as_sf(coords = c("eas_x", "nor_y"), crs = 32617) 
-data_sf
+head(data_sf)
 
 data_xy<- data_sf%>%
   st_coordinates() %>%
   as.data.frame()
-data_xy
+
 
 data_dfw <- cbind(data_sf, data_xy)
-data_dfw
-class(data_dfw)
+head(data_dfw)
+
 summary(data_dfw)
 ```
 
@@ -177,7 +180,7 @@ anova (mod0_60_90)
 
 Then we fit the models with spatial correlation structures which should be the more appropriate choice with location data included in our analyses. The following chunk includes the nlme::lme model with exponential correlation structure for all 6 depths sampled.
 ```{r}
-mod1_exp_0_5<- lme(x0_5_loi_g_kg~SDT*FL*X+Y,  #SDT*FL doesnot work
+mod1_exp_0_5<- lme(x0_5_loi_g_kg~SDT*FL*X+Y,
                 random = ~1|FL/SDT,
            correlation =  corExp(form = ~(X+Y)),
            data = data_dfw)
@@ -511,14 +514,38 @@ sph_10_20_XY_means
 ```
 Plotting means at the significant X and Y locations.
 
-```{r}
-ggplot(data_dfw, aes(x = X, y = Y, color = factor(X), shape = factor(Y))) +
-  geom_point() +
-  stat_summary(data = sph_10_20_XY_means, fun = mean_loi_10_20, geom = "point", shape = 1, size = 4, color = "black") +
-  labs(x = "X", y = "Y", color = "Easting", shape = "Northing", title = "Mean Response at X and Y Locations") +
-  theme_minimal()
+
+```{r emmeans of spherical structure at 10-20 depth}
+library(emmeans)
+rm_loi_10_20_sph <- emmeans(mod2_sph_10_20, ~X + Y| SDT : FL ) %>%
+  as.data.frame()
+  
+  
+
+rm_loi_10_20_sph
 ```
 
+
+
+```{r emmeans of default}
+mod0_10_20_emmeans <- emmeans(mod0_10_20,~ SDT * FL * X + Y + (1 | FL) + (1 | SDT))%>%
+  as.data.frame()
+  
+mod0_10_20_emmeans
+                 
+```
+```{r}
+validation <- cbind(mod0_10_20_emmeans,rm_loi_10_20_sph) #%>%
+  #rename(emmenas_def=emmean.1) %>%
+  #rename(SE_def= SE.1) %>%
+  #dplyr::select(X,Y,SDT,FL, emmean ,SE,emmean.1,SE.1)
+validation
+
+```
+
+After extracting emmeans, we compared one of our model at 10-20 depth that best fitted for spherical stucture with the default one and found that the standard error was less in our predicted model than the default model.
+
+So we can conclude that our model worked better for spherical stucture for most of the depths.  
 
 # Team work in GitHub  
 Whether you are working with your future-self or as duos, make sure to stage, commit, and push after finishing each of the sub-sections above. When committing, write commit messages that are short and descriptive (e.g., finished wrangling).  
